@@ -1,0 +1,11 @@
+<UserControl x:Class="My_MiniMes.Shell.Views.MonitorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="White">
+        <!-- 这是一个子页面的 UI -->
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="设备监控中心" FontSize="36" FontWeight="Bold" Foreground="#12304E" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding WelcomeMessage}" FontSize="18" Foreground="Gray" Margin="0,20,0,0" HorizontalAlignment="Center"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

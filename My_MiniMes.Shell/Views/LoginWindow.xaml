@@ -1,0 +1,162 @@
+﻿<Window x:Class="My_MiniMes.Shell.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:My_MiniMes.Shell.Views"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:helper="clr-namespace:My_MiniMes.Shell.Helpers"
+        xmlns:vms="clr-namespace:My_MiniMes.Shell.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vms:LoginViewModel, IsDesignTimeCreatable=False}"
+        Title="系统登录" Height="600" Width="1000"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#0BA3B2"/>
+        <SolidColorBrush x:Key="CardBrush" Color="SeaShell"/>
+        <SolidColorBrush x:Key="GhostBrush" Color="#20FFFFFF"/>
+
+        <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Padding" Value="10 0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="PasswordBox" BasedOn="{StaticResource MaterialDesignPasswordBox}">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Padding" Value="10 0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="White" CornerRadius="10" Margin="20">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="15" ShadowDepth="0" Opacity="0.3"/>
+        </Border.Effect>
+
+        <Grid>
+            <!-- 背景渐变色 -->
+            <Border>
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#0F2027" Offset="0"/>
+                        <GradientStop Color="#203A43" Offset="0.5"/>
+                        <GradientStop Color="#2C5364" Offset="1.0"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+
+            <!-- 自定义标题栏 (右上角的控制按钮) -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Panel.ZIndex="1">
+                <!-- 最小化按钮 -->
+                <Button Click="BtnMinimize_Click" Style="{StaticResource MaterialDesignIconForegroundButton}" Width="32" Height="32" Padding="0" Foreground="White" ToolTip="最小化">
+                    <materialDesign:PackIcon Kind="WindowMinimize" Width="20" Height="20" />
+                </Button>
+                <!-- 关闭按钮 -->
+                <Button Click="BtnClose_Click" Style="{StaticResource MaterialDesignIconForegroundButton}" Width="32" Height="32" Padding="0" Foreground="White" ToolTip="关闭">
+                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" />
+                </Button>
+            </StackPanel>
+
+            <!-- 动画翻转器 -->
+            <materialDesign:Transitioner SelectedIndex="{Binding SlideIndex}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="1000" Height="600">
+
+                <!--登录界面-->
+                <materialDesign:TransitionerSlide>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Background="{StaticResource CardBrush}" CornerRadius="14" Padding="20" Margin="12">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="280">
+                                <TextBlock Text="系统登录" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0 0 0 20"/>
+                                <TextBox Text="{Binding Account, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="账号" Margin="0 0 0 15"/>
+                                <!-- 修复了 helper 命名空间的引用问题 -->
+                                <PasswordBox materialDesign:HintAssist.Hint="密码"
+                                             helper:PasswordBoxHelper.Attach="True"
+                                             helper:PasswordBoxHelper.Password
+                                             ="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                             Margin="0 0 0 30"/>
+                                <Button Content="登 录" Command="{Binding LoginCommand}" 
+                                        Background="{StaticResource PrimaryBrush}" BorderThickness="0" 
+                                        Height="40" FontSize="16"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Background="{StaticResource GhostBrush}" CornerRadius="14" Padding="40" Margin="12">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="MES制造执行系统" Foreground="White" FontSize="20" Margin="0 0 0 20"/>
+                                <Button Content="去 注 册" Command="{Binding GoRegisterCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="White" BorderBrush="White" Height="40" Width="140"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </materialDesign:TransitionerSlide>
+
+                <!--注册界面-->
+                <materialDesign:TransitionerSlide>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Background="{StaticResource PrimaryBrush}" Padding="50">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                
+                                <TextBlock Text="MES制造执行系统" Foreground="White" FontSize="28" Margin="5 0 0 50"/>
+
+                                <Button Content="返回登录" Command="{Binding GoLoginCommand}" 
+                                    Style="{StaticResource MaterialDesignFlatDarkBgButton}"
+                                    Height="40" FontSize="16"
+                                    VerticalAlignment="Bottom"
+                                    HorizontalAlignment="Center"
+                                    Margin="0 60 0 0"/>
+                                
+                            </StackPanel>
+                            
+                            
+                        </Border>
+
+
+                        <Border Grid.Column="1" Background="{StaticResource CardBrush}" CornerRadius="14" Padding="20">
+                            
+                            
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+
+                                <TextBlock Text="注 册" Foreground="#151A3F" FontSize="45" VerticalAlignment="Top" Margin="90 0 0 80"/>
+
+                                <TextBox Text="{Binding Account,UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="用户名" Margin="15 0 5 30"
+                                         Width="250"/>
+                                <PasswordBox materialDesign:HintAssist.Hint="密码"
+                                             helper:PasswordBoxHelper.Attach="True"
+                                             helper:PasswordBoxHelper.Password
+                                             ="{Binding Password,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                             Width="250"
+                                             Margin="10 0 5 30"/>
+                                <PasswordBox materialDesign:HintAssist.Hint="确认密码"
+                                             helper:PasswordBoxHelper.Attach="True"
+                                             helper:PasswordBoxHelper.Password
+                                            ="{Binding Password,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                             Margin="10 0 5 30"
+                                             Width="250"/>
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal" Margin="10 0 5 0">
+                                    <Button Content="注 册" Command="{Binding RegisterCommand}"
+                                        Background="{StaticResource PrimaryBrush}" BorderThickness="0"
+                                        Height="40" FontSize="16"/>
+                                    
+                                </StackPanel>
+                                
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </materialDesign:TransitionerSlide>
+            </materialDesign:Transitioner>
+        </Grid>
+    </Border>
+</Window>
