@@ -142,7 +142,7 @@
                                 <PasswordBox materialDesign:HintAssist.Hint="确认密码"
                                              helper:PasswordBoxHelper.Attach="True"
                                              helper:PasswordBoxHelper.Password
-                                            ="{Binding Password,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                            ="{Binding PasswordConfirm,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                                              Margin="10 0 5 30"
                                              Width="250"/>
                                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal" Margin="10 0 5 0">

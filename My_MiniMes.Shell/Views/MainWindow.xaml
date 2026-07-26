@@ -1,65 +1,282 @@
-<Window x:Class="My_MiniMes.Shell.Views.MainWindow"
+﻿<Window x:Class="My_MiniMes.Shell.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:views="clr-namespace:My_MiniMes.Shell.Views"
         xmlns:vms="clr-namespace:My_MiniMes.Shell.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vms:MainViewModel, IsDesignTimeCreatable=False}"
         Title="My Mini MES" Height="800" Width="1250" WindowStartupLocation="CenterScreen">
     
-    <!-- [Prism 对比] 在 Prism 中你会在 ContentControl 里面写 prism:RegionManager.RegionName="MainRegion"。
-         而在标准 WPF 中，我们用 DataTemplate 数据模板！
-         意思是告诉 WPF：当我在内容区塞入一个 MonitorViewModel 类型的对象时，请自动把它渲染成 views:MonitorView 界面。
-         这是 WPF 里最精髓的实现单页应用 (SPA) 架构的方法！-->
+    <!-- 资源字典区：存放供当前窗口反复使用的样式 (Style) 和数据模板 (DataTemplate)  -->
+    
     <Window.Resources>
+        <!-- 1. 数据模板映射：实现 SPA 单页路由 -->
         <DataTemplate DataType="{x:Type vms:MonitorViewModel}">
             <views:MonitorView />
         </DataTemplate>
-        <!-- 未来还可以无限增加： <DataTemplate DataType="{x:Type vms:OrderViewModel}"> <views:OrderView /> </DataTemplate> -->
+
+        <!-- 2. 布尔值转换器：用于根据绑定的布尔值来决定控件的显示/隐藏 -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <!-- 3. 左侧导航按钮的统一样式 (企业级无边框扁平化设计) -->
+        <Style x:Key="NavButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Margin" Value="0,8,0,0" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="Foreground" Value="#BBD1E6" /> <!-- 未选中时的浅蓝色文字 -->
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Cursor" Value="Hand" />
+            <!-- 重写 ControlTemplate 以彻底去掉 Windows 原生按钮的丑陋银白色边框和点击下沉动画 -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter Margin="{TemplateBinding Margin}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1D4F80" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#173F67" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 4. 折叠子菜单内部的按钮样式 (内缩量加大，且背景颜色透明以体现层级感) -->
+        <Style x:Key="SubNavButtonStyle" BasedOn="{StaticResource NavButtonStyle}" TargetType="Button">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="Padding" Value="48,0,16,0" /> <!-- 左侧留出更多空白(48)，体现缩进和树状结构 -->
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <!-- 5. 带有折叠展开功能的 ToggleButton 样式 (例如生产订单这一项) -->
+        <Style x:Key="NavToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Margin" Value="0,8,0,0" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="Foreground" Value="#BBD1E6" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter Margin="{TemplateBinding Margin}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- 鼠标悬停变亮 -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1D4F80" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <!-- 展开状态时，保持高亮颜色，防止用户觉得焦点丢失 -->
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1D4F80" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
+    <!-- ========================================================================= -->
+    <!-- 整体布局骨架：分左右两列 (深色侧边栏 + 浅色工作区)                           -->
+    <!-- ========================================================================= -->
     <Grid Background="#F0F2F5">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200" />
+            <!-- 侧边栏宽度设为定宽220，后续可以通过转换器绑定 ViewModel 的 IsMenuCollapsed 实现动画收缩 -->
+            <ColumnDefinition Width="220" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- 左侧菜单 -->
+        <!-- ===================================================================== -->
+        <!-- 区域 1：深色侧边栏 (Sidebar)                                           -->
+        <!-- ===================================================================== -->
         <Border Grid.Column="0" Background="#12304E" CornerRadius="0 8 8 0">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" /> <!-- Logo区 -->
+                    <RowDefinition Height="*" />    <!-- 中间滚动的导航菜单区 -->
+                    <RowDefinition Height="Auto" /> <!-- 底部固定区域 (如退出登录) -->
                 </Grid.RowDefinitions>
                 
-                <StackPanel Grid.Row="0" Margin="16,18,16,14">
-                    <TextBlock Text="Mini MES" Foreground="White" FontSize="24" FontWeight="Bold" />
+                <!-- 1.1 侧边栏顶部 Logo 区域 -->
+                <StackPanel Grid.Row="0" Margin="20,24,20,24">
+                    <TextBlock Text="Mini MES" Foreground="White" FontSize="26" FontWeight="Bold" FontFamily="Arial Black" />
+                    <TextBlock Text="智能制造执行系统" Foreground="#8FAAC4" FontSize="13" Margin="0,6,0,0" />
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Margin="10,20,10,10">
-                    <Button Content="设备监控" Command="{Binding ShowMonitorCommand}" Foreground="White" Background="#1D4F80" BorderThickness="0" Height="42" Margin="0 0 0 10"/>
-                    <Button Content="生产订单" Command="{Binding ShowOrderCommand}" Foreground="White" Background="Transparent" BorderThickness="0" Height="42" Margin="0 0 0 10"/>
-                </StackPanel>
+                <!-- 1.2 侧边栏中间 导航菜单区 (放入 ScrollViewer 以防菜单太多撑爆屏幕) -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="12,0,12,10">
+                        
+                        <!-- 菜单项：设备监控 (绑定 ShowMonitorCommand) -->
+                        <!-- 全面使用了 MaterialDesign 的 PackIcon 替换了系统默认丑陋的乱码字体图标 -->
+                        <Button Command="{Binding ShowMonitorCommand}" Style="{StaticResource NavButtonStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="MonitorDashboard" Width="22" Height="22" VerticalAlignment="Center" />
+                                <TextBlock Text="设备监控" Margin="14,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- =================================================================== -->
+                        <!-- 菜单项：生产订单 (这是一个带下拉子菜单的 ToggleButton)              -->
+                        <!-- 原理：ToggleButton 相当于一个可以按下去卡住的开关，绑定了 IsOrderMenuOpen -->
+                        <!-- =================================================================== -->
+                        <ToggleButton x:Name="BtnOrderMenu" IsChecked="{Binding IsOrderMenuOpen, Mode=TwoWay}" Style="{StaticResource NavToggleButtonStyle}">
+                            <!-- 用 Grid 撑满宽度，把下拉箭头 (ChevronDown) 挤到最右边对齐 -->
+                            <Grid Width="170"> 
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Grid.Column="0" Kind="CartOutline" Width="22" Height="22" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="生产订单" Margin="14,0,0,0" VerticalAlignment="Center" />
+                                <materialDesign:PackIcon Grid.Column="2" Kind="ChevronDown" Width="18" Height="18" VerticalAlignment="Center" />
+                            </Grid>
+                        </ToggleButton>
+
+                        <!-- 子菜单面板：它的 Visibility (可见性) 直接绑定到上面那个按钮的 IsOrderMenuOpen 属性。 -->
+                        <!-- 当按钮被按下，IsOpen 变 True，这里就显示；再点一下变 False，这里就隐藏，实现了经典的折叠菜单效果。 -->
+                        <Border Visibility="{Binding IsOrderMenuOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel>
+                                <Button Command="{Binding ShowOrderBoardCommand}" Style="{StaticResource SubNavButtonStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <!-- 用一个圆点作为子菜单的指示标 -->
+                                        <materialDesign:PackIcon Kind="CircleSmall" Width="20" Height="20" VerticalAlignment="Center" />
+                                        <TextBlock Text="订单看板" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ShowOrderMaintenanceCommand}" Style="{StaticResource SubNavButtonStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="CircleSmall" Width="20" Height="20" VerticalAlignment="Center" />
+                                        <TextBlock Text="订单维护" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 菜单项：数据报表 -->
+                        <Button Command="{Binding ShowReportCommand}" Style="{StaticResource NavButtonStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ChartLine" Width="22" Height="22" VerticalAlignment="Center" />
+                                <TextBlock Text="数据报表" Margin="14,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- 1.3 侧边栏底部：退出登录按钮区 -->
+                <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="#1C4065" Margin="12,0,12,20" Padding="0,10,0,0">
+                    <!-- 特意把字的颜色变成代表危险的淡红色 (Foreground="#E57373") -->
+                    <Button Command="{Binding SignOutCommand}" Style="{StaticResource NavButtonStyle}" Foreground="#E57373">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ExitToApp" Width="22" Height="22" VerticalAlignment="Center" />
+                            <TextBlock Text="退出登录" Margin="14,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Border>
             </Grid>
         </Border>
 
-        <!-- 右侧主区域 -->
-        <Border Grid.Column="1" Background="White" Margin="12" CornerRadius="12">
+        <!-- ===================================================================== -->
+        <!-- 区域 2：浅色主工作区 (Workspace)                                        -->
+        <!-- ===================================================================== -->
+        <Border Grid.Column="1" Background="White" Margin="16" CornerRadius="12">
+            <!-- 加上一层淡淡的底层阴影，使得右边操作区有一种悬浮在背景板上的空间层次感 (Z轴拉升) -->
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="#000000" Opacity="0.05" />
+            </Border.Effect>
+            
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="50" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="60" /> <!-- 顶部导航标题栏 -->
+                    <RowDefinition Height="*" />  <!-- 下方业务组件呈现区 -->
                 </Grid.RowDefinitions>
                 
-                <Border Grid.Row="0" Background="#F7FAFD" BorderBrush="#E8EEF5" BorderThickness="0,0,0,1" CornerRadius="12 12 0 0">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12 0">
-                        <materialDesign:PackIcon Kind="Menu" Width="24" Height="24" Foreground="#1F2D3D" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding PageTitle}" FontSize="18" FontWeight="SemiBold" Foreground="#1F2D3D" Margin="12,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
+                <!-- 2.1 右侧顶部 Header 栏 -->
+                <Border Grid.Row="0" BorderBrush="#E8EEF5" BorderThickness="0,0,0,1">
+                    <Grid Margin="16,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Header 左侧：汉堡包折叠按钮 & 当前页面标题 -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- 汉堡包按钮：用于展开折叠菜单 -->
+                            <Button Command="{Binding ToggleMenuCommand}" ToolTip="{Binding MenuToggleToolTip}"
+                                    Style="{StaticResource MaterialDesignIconForegroundButton}" Foreground="#5E6D82" Width="36" Height="36">
+                                <materialDesign:PackIcon Kind="Menu" Width="24" Height="24" />
+                            </Button>
+                            
+                            <!-- 绑定了 ViewModel 中的 PageTitle，当你点击左边菜单时，这里会自动变换标题 -->
+                            <TextBlock Text="{Binding PageTitle}" FontSize="18" FontWeight="SemiBold" Foreground="#1F2D3D" 
+                                       Margin="12,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Header 右侧：当前登录用户信息 & 设置 -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- 用户头像图标 -->
+                            <materialDesign:PackIcon Kind="AccountCircle" Width="32" Height="32" Foreground="#C0C4CC" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            
+                            <!-- 问候语和角色名 -->
+                            <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="{Binding CurrentUserName}" FontSize="14" FontWeight="Bold" Foreground="#303133" />
+                                <TextBlock Text="{Binding CurrentRoleGreeting}" FontSize="12" Foreground="#909399" Margin="0,2,0,0" />
+                            </StackPanel>
+
+                            <!-- 分割线，让排版更克制、更整洁 -->
+                            <Border Width="1" Height="24" Background="#DCDFE6" Margin="0,0,20,0" />
+
+                            <!-- 设置 Popup 菜单按钮 (齿轮图标) -->
+                            <ToggleButton x:Name="BtnSettings" IsChecked="{Binding IsSettingsMenuOpen, Mode=TwoWay}"
+                                          Style="{StaticResource MaterialDesignIconForegroundButton}" Foreground="#5E6D82" Width="36" Height="36">
+                                <materialDesign:PackIcon Kind="CogOutline" Width="24" Height="24" />
+                            </ToggleButton>
+
+                            <!-- 当点击上面那个齿轮按钮时，这里就会弹出一个漂浮在最顶层的面板 (Popup) -->
+                            <Popup AllowsTransparency="True" IsOpen="{Binding IsSettingsMenuOpen, Mode=TwoWay}" 
+                                   Placement="Bottom" PlacementTarget="{Binding ElementName=BtnSettings}" StaysOpen="False" VerticalOffset="8">
+                                <Border Width="150" Background="White" CornerRadius="6" BorderBrush="#E4E7ED" BorderThickness="1">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="10" ShadowDepth="2" Color="#000000" Opacity="0.1" />
+                                    </Border.Effect>
+                                    <StackPanel Margin="4">
+                                        <!-- 设置里的子菜单项 -->
+                                        <Button Content="系统配置" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#606266" HorizontalContentAlignment="Left" />
+                                        <Button Content="查看日志" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#606266" HorizontalContentAlignment="Left" />
+                                        <Separator Margin="0,4" />
+                                        <Button Command="{Binding SignOutCommand}" Content="退出当前账号" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#F56C6C" HorizontalContentAlignment="Left" />
+                                    </StackPanel>
+                                </Border>
+                            </Popup>
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
-                <!-- 核心魔法：这里绑定了 MainViewModel 里的 CurrentView 变量。
-                     只要 ViewModel 里改变了 CurrentView 的值，这里的界面就会根据上面的 DataTemplate 自动切换！ -->
-                <ContentControl Grid.Row="1" Margin="8" Content="{Binding CurrentView}" />
+                <!-- 2.2 右侧最核心的工作区 (SPA 单页路由注入点) -->
+                <!-- 这里的 Content 会随着 MainViewModel.CurrentView 的变化，自动根据最上方字典里的 DataTemplate 渲染出不同的 UserControl 画面 -->
+                <ContentControl Grid.Row="1" Margin="12" Content="{Binding CurrentView}" />
             </Grid>
         </Border>
     </Grid>

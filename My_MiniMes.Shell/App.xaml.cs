@@ -40,6 +40,11 @@ namespace My_MiniMes.Shell
                     // 登录窗口用完就会被销毁，下次再要时应该是个新的，所以用 Transient。
                     services.AddTransient<LoginWindow>();    
 
+                    services.AddSingleton<IDataRepository, SqliteDataRepository>();
+                    services.AddSingleton<ModbusPollingService>();
+                    // 因为 WPF 需要依赖它，所以先作为 Singleton 注册给 WPF 视图模型用，再通过 AddHostedService 托管给生命周期
+                    services.AddHostedService(provider => provider.GetRequiredService<ModbusPollingService>());
+
                     // ==========================================
                     // 2. 注册所有的视图模型 (ViewModels)
                     // ==========================================

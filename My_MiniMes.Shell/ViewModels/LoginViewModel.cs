@@ -1,5 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Dapper;
+using Microsoft.Data.Sqlite;
+using My_MiniMes.Shell.Models;
+using My_MiniMes.Shell.Services;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -45,6 +49,12 @@ namespace My_MiniMes.Shell.ViewModels
         [ObservableProperty] 
         private string _password = "";
 
+        /// <summary>
+        /// 确认密码
+        /// </summary>
+        [ObservableProperty]
+        private string _passwordConfirm = "";
+
         // 用于控制 MaterialDesign 框架中的 Transitioner (翻转动画组件) 显示哪一页。
         // 0 代表第一页(登录界面)，1 代表第二页(注册界面)。
         [ObservableProperty] 
@@ -63,21 +73,27 @@ namespace My_MiniMes.Shell.ViewModels
         [RelayCommand]
         private async Task LoginAsync()
         {
-            // await Task.Delay(500); 这是一个异步延迟，用来模拟真实的程序去数据库查询时耗费的 0.5 秒。
-            // 这样能保证 UI 在这 0.5 秒内不会卡死冻结，这也是企业级软件避免卡顿的标准做法。
-            await Task.Delay(500); 
 
-            // 第一层校验：如果不填账号密码就点登录，直接拦住
             if (string.IsNullOrWhiteSpace(Account) || string.IsNullOrWhiteSpace(Password))
             {
                 MessageBox.Show("账号或密码不能为空！");
                 return;
             }
 
-            // 第二层校验：账号密码对比。
-            // 目前还没有连数据库，所以我们写死判断 account=="admin" 并且 password=="123456" 才算成功。
-            // 以后这里会被替换成：bool isOk = await _dbService.VerifyUser(Account, Password);
-            if (Account == "admin" && Password == "123456")
+            string sql = @"select Account,PasswordHash from Users where Account = @Account and IsActive = 1";
+            using var conn = new SqliteConnection(DatabaseInitializer.ConnectionString);
+            var user = await conn.QueryFirstOrDefaultAsync<UserModel>(sql, new
+            {
+                Account = Account
+            });
+
+            if(user == null)
+            {
+                MessageBox.Show("用户不存在");
+                return;
+            }
+
+            if (user.Account == Account && user.PasswordHash == Password)
             {
                 // 如果账号密码正确，触发 LoginSucceeded 事件，通知外面的 Window "你可以关闭了"
                 LoginSucceeded?.Invoke(); 
@@ -88,6 +104,51 @@ namespace My_MiniMes.Shell.ViewModels
                 MessageBox.Show("账号密码错误！(测试账号: admin/123456)");
             }
         }
+
+        /// <summary>
+        /// 用户注册
+        /// </summary>
+        /// <returns></returns>
+        [RelayCommand]
+        private async Task RegisterAsync()
+        {
+            if (string.IsNullOrWhiteSpace(Account) || string.IsNullOrWhiteSpace(Password)
+                || string.IsNullOrWhiteSpace(PasswordConfirm))
+            {
+                MessageBox.Show("账号和密码不能为空");
+            }
+            if (!(Password==PasswordConfirm))
+            {
+                MessageBox.Show("两次密码不一致");
+            }
+            //先查询账号是否存在
+            using var conn = new SqliteConnection(DatabaseInitializer.ConnectionString);
+            var existUser = await conn.QueryFirstOrDefaultAsync<UserModel>(
+                @"select * from Users where Account = @Account", new
+                {
+                    Account = Account
+                });
+            if(existUser != null)
+            {
+                MessageBox.Show("该用户已存在");
+            }
+            string sql = @"insert into Users(UserName,Account,IsActive,PasswordHash,Salt) 
+                         values(@UserName,@Account,@IsActive,@PasswordHash,@Salt)";
+            int success = await conn.ExecuteAsync(sql, new { UserName = "操作人员", Account = Account, 
+                IsActive = 1, PasswordHash = Password,Salt = Guid.NewGuid().ToString()
+            });
+            if(success >= 0)
+            {
+                MessageBox.Show("注册成功");
+                GoLogin();
+                return;
+            }
+            MessageBox.Show("注册失败");
+        }
+
+
+
+
 
         /// <summary>
         /// 当用户点击 "去注册" 按钮时触发。
