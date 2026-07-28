@@ -69,7 +69,17 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     
-                    <TextBlock Text="设备实时列表" FontSize="16" FontWeight="SemiBold" Foreground="#1F2D3D" Margin="4,4,0,12"/>
+                    <Grid Margin="4,4,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="设备实时列表" FontSize="16" FontWeight="SemiBold" Foreground="#1F2D3D" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Style="{StaticResource MaterialDesignFlatButton}" Padding="4" Height="30"
+                                Command="{Binding AddDeviceCommand}" ToolTip="添加新设备">
+                            <materialDesign:PackIcon Kind="Plus" Width="20" Height="20" Foreground="#409EFF"/>
+                        </Button>
+                    </Grid>
                     
                     <ListBox Grid.Row="1" ItemsSource="{Binding DeviceList}" SelectedItem="{Binding SelectedDevice}"
                              Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
@@ -106,6 +116,7 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 
@@ -162,6 +173,13 @@
                                         <TextBlock Text="{Binding Temperature, StringFormat='{}{0:F1} ℃'}" FontSize="13" Foreground="#1F2D3D" FontWeight="SemiBold" 
                                                    HorizontalAlignment="Right" Margin="0,4,0,0" />
                                     </StackPanel>
+
+                                    <!-- 编辑按钮 -->
+                                    <Button Grid.Column="3" Style="{StaticResource MaterialDesignIconForegroundButton}" Width="28" Height="28" Padding="0"
+                                            Command="{Binding DataContext.EditDeviceCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                            CommandParameter="{Binding}" ToolTip="编辑设备">
+                                        <materialDesign:PackIcon Kind="Pencil" Width="16" Height="16" Foreground="#909399" />
+                                    </Button>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

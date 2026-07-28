@@ -44,10 +44,25 @@ namespace My_MiniMes.Shell.Services
                     DeviceName TEXT NOT NULL,
                     IpAddress TEXT NOT NULL,
                     Port INTEGER,
-                    SerialPort TEXT NOT NULL,
+                    SerialPort TEXT,
                     SlaveId INTEGER,
-                    DeviceState TEXT NOT NULL,
+                    BaudRate INTEGER DEFAULT 9600,
+                    DataBits INTEGER DEFAULT 8,
+                    StopBits INTEGER DEFAULT 1,
+                    Parity INTEGER DEFAULT 0,
+                    DeviceState TEXT DEFAULT '离线',
                     LastUpdateTime DATETIME
+                );
+
+                -- 创建历史数据表用于分钟级追溯
+                CREATE TABLE IF NOT EXISTS DeviceHistoryData (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    DeviceId INTEGER NOT NULL,
+                    Temperature REAL,
+                    Pressure REAL,
+                    Speed INTEGER,
+                    StatusCode INTEGER,
+                    RecordTime DATETIME DEFAULT (datetime('now', 'localtime'))
                 );
             ");
 

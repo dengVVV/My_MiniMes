@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView;
@@ -33,6 +34,9 @@ namespace My_MiniMes.Shell.ViewModels
         private int _faultCount;
         [ObservableProperty]
         private int _disabledCount;
+
+        [ObservableProperty]
+        private My_MiniMes.Shell.Models.DeviceModel _editingDevice = new();
 
         // =====================================
         // LiveCharts2 图表绑定数据源
@@ -135,6 +139,10 @@ namespace My_MiniMes.Shell.ViewModels
                         Port = d.Port,
                         SerialPort = d.SerialPort,
                         SlaveId = d.SlaveId,
+                        BaudRate = d.BaudRate,
+                        DataBits = d.DataBits,
+                        StopBits = d.StopBits,
+                        Parity = d.Parity,
                         DeviceState = d.DeviceState,
                         LastUpdateTime = d.LastUpdateTime
                     });
@@ -200,6 +208,60 @@ namespace My_MiniMes.Shell.ViewModels
             // 当用户点击切换左侧设备卡片时，清空当前图表的历史折线，重新开始绘制新设备的点
             _temperatureValues.Clear();
             _pressureValues.Clear();
+        }
+
+        [RelayCommand]
+        private async Task AddDevice()
+        {
+            EditingDevice = new My_MiniMes.Shell.Models.DeviceModel { DeviceState = "离线" };
+            var dialog = new My_MiniMes.Shell.UserControls.DeviceEditDialogView { DataContext = this };
+            await MaterialDesignThemes.Wpf.DialogHost.Show(dialog, "RootDialog");
+        }
+
+        [RelayCommand]
+        private async Task EditDevice(DeviceDto dto)
+        {
+            if (dto == null) return;
+            EditingDevice = new My_MiniMes.Shell.Models.DeviceModel
+            {
+                DeviceId = dto.DeviceId,
+                DeviceName = dto.DeviceName,
+                IpAddress = dto.IpAddress,
+                Port = dto.Port,
+                SerialPort = dto.SerialPort,
+                SlaveId = dto.SlaveId,
+                BaudRate = dto.BaudRate,
+                DataBits = dto.DataBits,
+                StopBits = dto.StopBits,
+                Parity = dto.Parity,
+                DeviceState = dto.DeviceState
+            };
+            var dialog = new My_MiniMes.Shell.UserControls.DeviceEditDialogView { DataContext = this };
+            await MaterialDesignThemes.Wpf.DialogHost.Show(dialog, "RootDialog");
+        }
+
+        [RelayCommand]
+        private async Task SaveDevice()
+        {
+            if (string.IsNullOrWhiteSpace(EditingDevice.DeviceName))
+            {
+                MessageBox.Show("设备名称不能为空！");
+                return;
+            }
+
+            if (EditingDevice.DeviceId == 0)
+            {
+                await _repository.InsertDeviceAsync(EditingDevice);
+            }
+            else
+            {
+                await _repository.UpdateDeviceAsync(EditingDevice);
+            }
+
+            MaterialDesignThemes.Wpf.DialogHost.Close("RootDialog");
+            
+            // 重新加载设备列表
+            await LoadDevicesAsync();
         }
 
         public void Dispose()
