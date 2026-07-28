@@ -4,6 +4,7 @@ using My_MiniMes.Shell.ViewModels;
 using My_MiniMes.Shell.Views;
 using My_MiniMes.Shell.Services;
 using System.Windows;
+using System.Threading;
 
 namespace My_MiniMes.Shell
 {
@@ -14,7 +15,8 @@ namespace My_MiniMes.Shell
     /// </summary>
     public partial class App : Application
     {
-        // 全局通用的“主机 (Host)”，它负责管理所有的依赖注入(DI)、配置和日志。
+        // 全局通用的“主机后台 (Host)”，它负责管理所有的依赖注入(DI)、配置和日志。
+        //在WPF整个生命周期跑后台任务
         // 这也是 ASP.NET Core 和现代企业级 .NET 项目的标准基座。
         public static IHost AppHost { get; private set; }
 
@@ -41,8 +43,8 @@ namespace My_MiniMes.Shell
                     services.AddTransient<LoginWindow>();    
 
                     services.AddSingleton<IDataRepository, SqliteDataRepository>();
+                    // 将 ModbusPollingService 作为单例注册，并通过 AddHostedService 交给主机托管其生命周期(以支持优雅停机)
                     services.AddSingleton<ModbusPollingService>();
-                    // 因为 WPF 需要依赖它，所以先作为 Singleton 注册给 WPF 视图模型用，再通过 AddHostedService 托管给生命周期
                     services.AddHostedService(provider => provider.GetRequiredService<ModbusPollingService>());
 
                     // ==========================================
@@ -76,15 +78,11 @@ namespace My_MiniMes.Shell
             // 解决方案：在弹出登录框前，先暂时剥夺 WPF 的自动关闭权力，改成“除非我显式调用 Shutdown，否则绝对不许退出”。
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            // ====================================================
-            // 流程控制 1：尝试从 DI 容器获取 LoginWindow
-            // ====================================================
-            // 因为 LoginWindow 的构造函数写了需要 LoginViewModel，所以 DI 容器在背后默默地 new 了一个 LoginViewModel，
-            // 并且塞给了 LoginWindow，然后把组装好的 LoginWindow 交给你。
+            //尝试从 DI 容器获取 LoginWindow
             var loginWindow = AppHost.Services.GetRequiredService<LoginWindow>();
             
             // ShowDialog() 方法会以“模态对话框”的方式打开窗口。
-            // 它的特点是：代码会停在这一行不往下走，直到登录窗口被关闭！
+            //代码会停在这一行不往下走，直到登录窗口被关闭！
             // loginResult 会接收到 LoginWindow.xaml.cs 里面赋给 `this.DialogResult` 的值。
             var loginResult = loginWindow.ShowDialog();
 
@@ -95,11 +93,15 @@ namespace My_MiniMes.Shell
             {
                 // 如果 DialogResult 是 true，说明密码验证通过了。
                 
-                // 从容器中获取单例的 MainWindow (并且 DI 容器会自动把 MainViewModel 塞进去)
+                
                 var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
                 
                 // 显示主界面
                 mainWindow.Show();
+
+                // 在用户登录成功并进入主界面后，开启 Modbus 轮询服务的执行开关
+                var modbusService = AppHost.Services.GetRequiredService<ModbusPollingService>();
+                modbusService.StartPolling();
 
                 // 登录成功并且主界面成功呼出后，把程序的退出模式改回正常的“最后一个主窗口关闭时自动退出”。
                 ShutdownMode = ShutdownMode.OnLastWindowClose;
@@ -117,9 +119,13 @@ namespace My_MiniMes.Shell
         /// </summary>
         protected override async void OnExit(ExitEventArgs e)
         {
+            var modbusService = AppHost.Services.GetRequiredService<ModbusPollingService>();
+            modbusService.StopPolling();
+
             // 优雅地停止主机，释放所有占用的内存、文件句柄、数据库连接池等。
             await AppHost!.StopAsync();
             AppHost.Dispose();
+
             base.OnExit(e);
         }
     }

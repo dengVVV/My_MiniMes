@@ -93,7 +93,13 @@ namespace My_MiniMes.Shell.Services
         // 【核心】生产者-消费者模型：用于无锁化、平滑地将数据刷入 SQLite，彻底解决写库争抢
         private readonly Channel<DeviceHistoryRecord> _historyChannel = Channel.CreateUnbounded<DeviceHistoryRecord>();
 
+        // 业务轮询开关：受前端登录状态控制
+        private volatile bool _isPollingActive = false;
+
         public event EventHandler<DeviceDataUpdatedEventArgs>? DeviceDataUpdated;
+
+        public void StartPolling() => _isPollingActive = true;
+        public void StopPolling() => _isPollingActive = false;
 
         public ModbusPollingService(IServiceProvider serviceProvider)
         {
@@ -108,6 +114,13 @@ namespace My_MiniMes.Shell.Services
 
             while (!stoppingToken.IsCancellationRequested)
             {
+                if (!_isPollingActive)
+                {
+                    // 如果尚未登录启动，在此静默等待，不进行真正的轮询和数据库 IO
+                    await Task.Delay(1000, stoppingToken);
+                    continue;
+                }
+
                 try
                 {
                     //第一次初始化连接也检查
