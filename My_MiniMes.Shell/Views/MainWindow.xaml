@@ -13,11 +13,21 @@
         Background="#F0F2F5">
     
     <!-- 资源字典区：存放供当前窗口反复使用的样式 (Style) 和数据模板 (DataTemplate)  -->
-    
+
+
+    <!--如果WPF发现当前需要显示的数据对象类型是 MonitorViewModel，那么使用 MonitorView 作为它的显示模板。-->
     <Window.Resources>
         <!-- 1. 数据模板映射：实现 SPA 单页路由 -->
         <DataTemplate DataType="{x:Type vms:MonitorViewModel}">
             <views:MonitorView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vms:OrderBoardViewModel}">
+            <views:OrderBoardView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vms:OrderMaintenanceViewModel}">
+            <views:OrderMaintenanceView />
         </DataTemplate>
 
         <!-- 2. 布尔值转换器：用于根据绑定的布尔值来决定控件的显示/隐藏 -->

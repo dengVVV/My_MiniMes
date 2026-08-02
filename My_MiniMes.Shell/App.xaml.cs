@@ -53,6 +53,8 @@ namespace My_MiniMes.Shell
                     services.AddTransient<LoginViewModel>(); 
                     services.AddSingleton<MainViewModel>();
                     services.AddSingleton<MonitorViewModel>();
+                    services.AddSingleton<OrderBoardViewModel>();
+                    services.AddSingleton<OrderMaintenanceViewModel>();
                 })
                 .Build();
         }

@@ -126,6 +126,7 @@ namespace My_MiniMes.Shell.ViewModels
         {
             var dbDevices = await _repository.GetAllDevicesAsync();
             
+            //调回UI线程
             Application.Current.Dispatcher.Invoke(() =>
             {
                 DeviceList.Clear();
@@ -157,6 +158,11 @@ namespace My_MiniMes.Shell.ViewModels
             });
         }
 
+        /// <summary>
+        /// 收到来自设备数据所处理更新的业务逻辑
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnDeviceDataUpdated(object? sender, DeviceDataUpdatedEventArgs e)
         {
             // Modbus 轮询是在后台线程触发的，必须切回主线程更新 UI

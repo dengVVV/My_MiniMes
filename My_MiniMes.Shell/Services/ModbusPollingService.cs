@@ -114,7 +114,7 @@ namespace My_MiniMes.Shell.Services
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (!_isPollingActive)
+                if (!_isPollingActive)//等待用户登录后再启动modbus读写的业务
                 {
                     // 如果尚未登录启动，在此静默等待，不进行真正的轮询和数据库 IO
                     await Task.Delay(1000, stoppingToken);
@@ -124,8 +124,8 @@ namespace My_MiniMes.Shell.Services
                 try
                 {
                     //第一次初始化连接也检查
-                    //如果大于等于60s也就是到了入库时间就检查内存和数据库中设备信息的差异，主要用于检查用户是否修改或删除了下位机的信息
-                    if ((DateTime.Now - _lastDbCheckTime).TotalSeconds >= 60 || !_cachedDevices.Any())
+                    //如果大于等于15s也就是到了入库时间就检查内存和数据库中设备信息的差异，主要用于检查用户是否修改或删除了下位机的信息
+                    if ((DateTime.Now - _lastDbCheckTime).TotalSeconds >= 15 || !_cachedDevices.Any())
                     {
                         using var scope = _serviceProvider.CreateScope();
                         var repository = scope.ServiceProvider.GetRequiredService<IDataRepository>();

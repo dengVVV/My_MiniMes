@@ -67,13 +67,18 @@ namespace My_MiniMes.Shell.ViewModels
         // ==========================================
 
         private readonly MonitorViewModel _monitorViewModel;
-        // 等后续写了别的页面再继续注入，例如：
-        // private readonly OrderBoardViewModel _orderBoardViewModel;
+        private readonly OrderBoardViewModel _orderBoardViewModel;
+        private readonly OrderMaintenanceViewModel _orderMaintenanceViewModel;
 
-        public MainViewModel(MonitorViewModel monitorViewModel)
+        public MainViewModel(
+            MonitorViewModel monitorViewModel,
+            OrderBoardViewModel orderBoardViewModel,
+            OrderMaintenanceViewModel orderMaintenanceViewModel)
         {
             _monitorViewModel = monitorViewModel;
-            
+            _orderBoardViewModel = orderBoardViewModel;
+            _orderMaintenanceViewModel = orderMaintenanceViewModel;
+
             // 默认启动页显示为设备监控
             ShowMonitor();
         }
@@ -102,22 +107,25 @@ namespace My_MiniMes.Shell.ViewModels
         }
 
         /// <summary>
-        /// 导航：显示生产订单 - 订单看板 (待实现)
+        /// 导航：显示生产订单 - 订单看板，并在进入页面时刷新最新数据
         /// </summary>
         [RelayCommand]
-        private void ShowOrderBoard()
+        private async Task ShowOrderBoard()
         {
-            PageTitle = "生产订单看板 (模块开发中...)";
-            // CurrentView = _orderBoardViewModel;
+            PageTitle = "生产订单看板";
+            CurrentView = _orderBoardViewModel;
+            await _orderBoardViewModel.RefreshAsync();
         }
 
         /// <summary>
-        /// 导航：显示生产订单 - 订单维护 (待实现)
+        /// 导航：显示生产订单 - 订单维护，并在进入页面时刷新最新数据
         /// </summary>
         [RelayCommand]
-        private void ShowOrderMaintenance()
+        private async Task ShowOrderMaintenance()
         {
-            PageTitle = "生产订单维护 (模块开发中...)";
+            PageTitle = "生产订单维护";
+            CurrentView = _orderMaintenanceViewModel;
+            await _orderMaintenanceViewModel.RefreshAsync();
         }
 
         /// <summary>
