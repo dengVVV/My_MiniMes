@@ -69,11 +69,28 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0" Text="订单执行列表" FontSize="16" FontWeight="SemiBold" Foreground="#1F2D3D" VerticalAlignment="Center" />
 
-                    <ComboBox Grid.Column="1" Width="220" Margin="0,0,8,0"
+                    <TextBlock Grid.Column="1" Text="分类:" FontSize="14" Foreground="#606266" VerticalAlignment="Center" Margin="0,0,8,0" />
+
+                    <ComboBox Grid.Column="2" Width="180" Margin="0,0,12,0"
+                              ItemsSource="{Binding DeviceFilterOptions}"
+                              DisplayMemberPath="DisplayName"
+                              SelectedItem="{Binding SelectedDeviceFilter}"
+                              Background="White" Foreground="#303133" Padding="8,6">
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="ComboBoxItem">
+                                <Setter Property="Background" Value="White" />
+                                <Setter Property="Foreground" Value="#303133" />
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
+                    </ComboBox>
+
+                    <ComboBox Grid.Column="3" Width="200" Margin="0,0,8,0"
                               ItemsSource="{Binding AvailableDevices}"
                               DisplayMemberPath="DeviceName"
                               SelectedItem="{Binding SelectedDispatchDevice}"
@@ -86,24 +103,28 @@
                         </ComboBox.ItemContainerStyle>
                     </ComboBox>
 
-                    <Button Grid.Column="2" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
+                    <Button Grid.Column="4" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
                             Command="{Binding DispatchSelectedCommand}" ToolTip="调度到设备" Foreground="#409EFF" Margin="0,0,4,0">
                         <materialDesign:PackIcon Kind="PlayArrow" Width="20" Height="20" />
                     </Button>
 
-                    <Button Grid.Column="3" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
+                    <Button Grid.Column="5" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
                             Command="{Binding CompleteSelectedCommand}" ToolTip="完成订单" Foreground="#67C23A" Margin="0,0,4,0">
                         <materialDesign:PackIcon Kind="Check" Width="20" Height="20" />
                     </Button>
 
-                    <Button Grid.Column="4" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
+                    <Button Grid.Column="6" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
                             Command="{Binding RefreshCommand}" ToolTip="刷新" Foreground="#909399">
                         <materialDesign:PackIcon Kind="Refresh" Width="20" Height="20" />
                     </Button>
                 </Grid>
 
                 <ListBox Grid.Row="1" ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder}"
-                         Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
+                         Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.ScrollChanged="OrdersScrollViewer_ScrollChanged">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="0" />

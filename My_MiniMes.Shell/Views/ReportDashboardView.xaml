@@ -1,0 +1,164 @@
+<UserControl x:Class="My_MiniMes.Shell.Views.ReportDashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1050" Background="#F0F2F5">
+
+    <UserControl.Resources>
+        <Style x:Key="ReportIconButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignIconForegroundButton}">
+            <Setter Property="ToolTipService.ShowDuration" Value="60000" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部统计卡片 -->
+        <UniformGrid Grid.Row="0" Columns="5">
+            <Border Margin="0,0,12,0" Padding="16" Background="#ECEFF1" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="总订单数" Foreground="#455A64" FontSize="13" />
+                    <TextBlock Text="{Binding TotalOrderCount}" Foreground="#455A64" FontSize="28" FontWeight="Bold" Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+            <Border Margin="0,0,12,0" Padding="16" Background="#E3F2FD" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="目标产量" Foreground="#1976D2" FontSize="13" />
+                    <TextBlock Text="{Binding TargetQuantity}" Foreground="#1976D2" FontSize="28" FontWeight="Bold" Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+            <Border Margin="0,0,12,0" Padding="16" Background="#E8F5E9" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="已生产产量" Foreground="#2E7D32" FontSize="13" />
+                    <TextBlock Text="{Binding ProducedQuantity}" Foreground="#2E7D32" FontSize="28" FontWeight="Bold" Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+            <Border Margin="0,0,12,0" Padding="16" Background="#FFF8E1" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="整体完成率" Foreground="#F57F17" FontSize="13" />
+                    <TextBlock Text="{Binding CompletionRateText}" Foreground="#F57F17" FontSize="28" FontWeight="Bold" Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+            <Border Padding="16" Background="#FFEBEE" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="逾期订单" Foreground="#C62828" FontSize="13" />
+                    <TextBlock Text="{Binding OverdueCount}" Foreground="#C62828" FontSize="28" FontWeight="Bold" Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- 工具栏：刷新、导出 Excel -->
+        <Border Grid.Row="1" Margin="0,12,0,12" Background="White" CornerRadius="8" Padding="12">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="1" Color="Black" Opacity="0.05" />
+            </Border.Effect>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="数据看板" FontSize="16" FontWeight="SemiBold" Foreground="#1F2D3D" VerticalAlignment="Center" />
+
+                <Button Grid.Column="1" Style="{StaticResource ReportIconButtonStyle}" Width="36" Height="36" Padding="0"
+                        Command="{Binding ExportExcelCommand}" ToolTip="导出 Excel" Foreground="#409EFF" Margin="0,0,4,0">
+                    <materialDesign:PackIcon Kind="Download" Width="20" Height="20" />
+                </Button>
+
+                <Button Grid.Column="2" Style="{StaticResource ReportIconButtonStyle}" Width="36" Height="36" Padding="0"
+                        Command="{Binding RefreshCommand}" ToolTip="刷新" Foreground="#909399">
+                    <materialDesign:PackIcon Kind="Refresh" Width="20" Height="20" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- 图表区域：窗口高度不足时可纵向滚动，避免折线图内容被挤出窗外 -->
+        <ScrollViewer Grid.Row="2"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <!-- 第一行图表：柱形图 + 饼图 -->
+                <Grid MinHeight="300">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" MinHeight="300" Margin="0,0,12,0" Background="White" CornerRadius="8" Padding="16">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" ShadowDepth="1" Color="Black" Opacity="0.05" />
+                        </Border.Effect>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="各设备订单数量" FontSize="15" FontWeight="SemiBold" Foreground="#1F2D3D" Margin="0,0,0,12" />
+                            <lvc:CartesianChart Grid.Row="1"
+                                                Series="{Binding BarSeries}"
+                                                XAxes="{Binding BarXAxes}"
+                                                YAxes="{Binding BarYAxes}"
+                                                TooltipPosition="Right"
+                                                LegendPosition="Top"
+                                                AnimationsSpeed="0:0:0" />
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="1" MinHeight="300" Background="White" CornerRadius="8" Padding="16">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" ShadowDepth="1" Color="Black" Opacity="0.05" />
+                        </Border.Effect>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="订单状态分布" FontSize="15" FontWeight="SemiBold" Foreground="#1F2D3D" Margin="0,0,0,12" />
+                            <lvc:PieChart Grid.Row="1"
+                                          Series="{Binding PieSeries}"
+                                          LegendPosition="Right"
+                                          AnimationsSpeed="0:0:0" />
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- 第二行图表：折线图，独立保证更高的展示高度 -->
+                <Border MinHeight="420" Margin="0,12,0,0" Background="White" CornerRadius="8" Padding="16">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" ShadowDepth="1" Color="Black" Opacity="0.05" />
+                    </Border.Effect>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="产品目标与已产对比" FontSize="15" FontWeight="SemiBold" Foreground="#1F2D3D" Margin="0,0,0,12" />
+                        <lvc:CartesianChart Grid.Row="1"
+                                            Series="{Binding LineSeries}"
+                                            XAxes="{Binding LineXAxes}"
+                                            YAxes="{Binding LineYAxes}"
+                                            TooltipPosition="Right"
+                                            LegendPosition="Top"
+                                            AnimationsSpeed="0:0:0" />
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

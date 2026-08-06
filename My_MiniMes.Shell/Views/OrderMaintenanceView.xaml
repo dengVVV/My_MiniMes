@@ -32,26 +32,43 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Text="订单维护" FontSize="16" FontWeight="SemiBold" Foreground="#1F2D3D" VerticalAlignment="Center" />
 
-                <Button Grid.Column="1" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
+                <TextBlock Grid.Column="1" Text="分类:" FontSize="14" Foreground="#606266" VerticalAlignment="Center" Margin="0,0,8,0" />
+
+                <ComboBox Grid.Column="2" Width="180" Margin="0,0,12,0"
+                          ItemsSource="{Binding DeviceFilterOptions}"
+                          DisplayMemberPath="DisplayName"
+                          SelectedItem="{Binding SelectedDeviceFilter}"
+                          Background="White" Foreground="#303133" Padding="8,6">
+                    <ComboBox.ItemContainerStyle>
+                        <Style TargetType="ComboBoxItem">
+                            <Setter Property="Background" Value="White" />
+                            <Setter Property="Foreground" Value="#303133" />
+                        </Style>
+                    </ComboBox.ItemContainerStyle>
+                </ComboBox>
+
+                <Button Grid.Column="3" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
                         Command="{Binding AddOrderCommand}" ToolTip="新增订单" Foreground="#409EFF" Margin="0,0,4,0">
                     <materialDesign:PackIcon Kind="Plus" Width="20" Height="20" />
                 </Button>
 
-                <Button Grid.Column="2" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
+                <Button Grid.Column="4" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
                         Command="{Binding EditOrderCommand}" ToolTip="编辑订单" Foreground="#E6A23C" Margin="0,0,4,0">
                     <materialDesign:PackIcon Kind="Pencil" Width="20" Height="20" />
                 </Button>
 
-                <Button Grid.Column="3" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
+                <Button Grid.Column="5" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
                         Command="{Binding DeleteOrderCommand}" ToolTip="删除订单" Foreground="#F56C6C" Margin="0,0,4,0">
                     <materialDesign:PackIcon Kind="Delete" Width="20" Height="20" />
                 </Button>
 
-                <Button Grid.Column="4" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
+                <Button Grid.Column="6" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
                         Command="{Binding RefreshCommand}" ToolTip="刷新" Foreground="#909399">
                     <materialDesign:PackIcon Kind="Refresh" Width="20" Height="20" />
                 </Button>
@@ -79,21 +96,28 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="调度设备:" FontSize="14" Foreground="#606266" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
 
-                    <ComboBox Grid.Column="1" Width="220" HorizontalAlignment="Left"
-                              ItemsSource="{Binding AvailableDevices}"
-                              DisplayMemberPath="DeviceName"
-                              SelectedItem="{Binding SelectedDispatchDevice}"
-                              Background="White" Foreground="#303133" Padding="8,6">
-                        <ComboBox.ItemContainerStyle>
-                            <Style TargetType="ComboBoxItem">
-                                <Setter Property="Background" Value="White" />
-                                <Setter Property="Foreground" Value="#303133" />
-                            </Style>
-                        </ComboBox.ItemContainerStyle>
-                    </ComboBox>
+                        <TextBlock Text="调度设备:" FontSize="14" 
+                            Foreground="#606266" VerticalAlignment="Center" 
+                            Margin="0,0,10,0" HorizontalAlignment="Left"/>
 
+                        <ComboBox Width="220" HorizontalAlignment="Right"
+                            ItemsSource="{Binding AvailableDevices}"
+                            DisplayMemberPath="DeviceName"
+                            SelectedItem="{Binding SelectedDispatchDevice}"
+                            Background="White" Foreground="#303133" Padding="8,6">
+                            <ComboBox.ItemContainerStyle>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="Background" Value="White" />
+                                    <Setter Property="Foreground" Value="#303133" />
+                                </Style>
+                            </ComboBox.ItemContainerStyle>
+                        </ComboBox>
+
+                    </StackPanel>
+
+                    
                     <Button Grid.Column="2" Style="{StaticResource OrderIconButtonStyle}" Width="36" Height="36" Padding="0"
                             Command="{Binding DispatchSelectedCommand}" ToolTip="调度到设备" Foreground="#409EFF" Margin="8,0,4,0">
                         <materialDesign:PackIcon Kind="PlayArrow" Width="20" Height="20" />
@@ -114,6 +138,12 @@
                           CanUserResizeRows="False"
                           IsReadOnly="True"
                           SelectionMode="Single"
+                          EnableRowVirtualization="True"
+                          EnableColumnVirtualization="True"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          ScrollViewer.CanContentScroll="True"
+                          ScrollViewer.ScrollChanged="OrdersScrollViewer_ScrollChanged"
                           Background="White"
                           RowBackground="White"
                           AlternatingRowBackground="#FAFBFC"

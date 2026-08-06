@@ -8,6 +8,8 @@ namespace My_MiniMes.Shell.Services
 {
     public class SqliteDataRepository : IDataRepository
     {
+        // 分页查询和统计共用的订单筛选条件，支持按设备 ID 和“尚未调度”过滤
+        private const string OrderFilterCondition = "(@DeviceId IS NULL OR AssignedDeviceId = @DeviceId) AND (@OnlyUnassigned = 0 OR AssignedDeviceId IS NULL)";
         public async Task<IEnumerable<DeviceModel>> GetAllDevicesAsync()
         {
             using var connection = new SqliteConnection(DatabaseInitializer.ConnectionString);
@@ -64,6 +66,59 @@ namespace My_MiniMes.Shell.Services
         {
             using var connection = new SqliteConnection(DatabaseInitializer.ConnectionString);
             return await connection.QueryAsync<OrderModel>("SELECT * FROM Orders ORDER BY CreateTime DESC");
+        }
+
+        public async Task<IEnumerable<OrderModel>> GetOrdersPageAsync(int offset, int pageSize, int? deviceId = null, bool onlyUnassigned = false)
+        {
+            using var connection = new SqliteConnection(DatabaseInitializer.ConnectionString);
+            var sql = $@"
+                SELECT * FROM Orders
+                WHERE {OrderFilterCondition}
+                ORDER BY CreateTime DESC, Id DESC
+                LIMIT @PageSize OFFSET @Offset;";
+
+            return await connection.QueryAsync<OrderModel>(sql, new
+            {
+                Offset = offset,
+                PageSize = pageSize,
+                DeviceId = deviceId,
+                OnlyUnassigned = onlyUnassigned ? 1 : 0
+            });
+        }
+
+        public async Task<int> GetOrderCountAsync(int? deviceId = null, bool onlyUnassigned = false)
+        {
+            using var connection = new SqliteConnection(DatabaseInitializer.ConnectionString);
+            var sql = $@"
+                SELECT COUNT(1)
+                FROM Orders
+                WHERE {OrderFilterCondition};";
+
+            return await connection.ExecuteScalarAsync<int>(sql, new
+            {
+                DeviceId = deviceId,
+                OnlyUnassigned = onlyUnassigned ? 1 : 0
+            });
+        }
+
+        public async Task<OrderStatistics> GetOrderStatisticsAsync(int? deviceId = null, bool onlyUnassigned = false)
+        {
+            using var connection = new SqliteConnection(DatabaseInitializer.ConnectionString);
+            var sql = $@"
+                SELECT
+                    COUNT(1) AS TotalCount,
+                    COUNT(CASE WHEN Status = 0 THEN 1 END) AS PendingCount,
+                    COUNT(CASE WHEN Status = 1 THEN 1 END) AS InProgressCount,
+                    COUNT(CASE WHEN Status = 2 THEN 1 END) AS CompletedCount,
+                    COUNT(CASE WHEN Status <> 2 AND Deadline < datetime('now', 'localtime') THEN 1 END) AS OverdueCount
+                FROM Orders
+                WHERE {OrderFilterCondition};";
+
+            return await connection.QuerySingleAsync<OrderStatistics>(sql, new
+            {
+                DeviceId = deviceId,
+                OnlyUnassigned = onlyUnassigned ? 1 : 0
+            });
         }
 
         public async Task<int> InsertOrderAsync(OrderModel order)

@@ -30,5 +30,14 @@ namespace My_MiniMes.Shell.Services
 
         // 订单号查重：excludeId 用于编辑时排除当前订单自身
         Task<bool> OrderNoExistsAsync(string orderNo, int excludeId = 0);
+
+        // 订单分页查询：deviceId 为空表示全部设备，onlyUnassigned 为 true 时只查尚未调度订单
+        Task<IEnumerable<OrderModel>> GetOrdersPageAsync(int offset, int pageSize, int? deviceId = null, bool onlyUnassigned = false);
+
+        // 订单总数查询，用于分页时判断是否还有更多数据
+        Task<int> GetOrderCountAsync(int? deviceId = null, bool onlyUnassigned = false);
+
+        // 订单状态统计，用于看板顶部统计不依赖一次性加载全部订单
+        Task<OrderStatistics> GetOrderStatisticsAsync(int? deviceId = null, bool onlyUnassigned = false);
     }
 }

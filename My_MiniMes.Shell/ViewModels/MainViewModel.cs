@@ -69,15 +69,18 @@ namespace My_MiniMes.Shell.ViewModels
         private readonly MonitorViewModel _monitorViewModel;
         private readonly OrderBoardViewModel _orderBoardViewModel;
         private readonly OrderMaintenanceViewModel _orderMaintenanceViewModel;
+        private readonly ReportDashboardViewModel _reportDashboardViewModel;
 
         public MainViewModel(
             MonitorViewModel monitorViewModel,
             OrderBoardViewModel orderBoardViewModel,
-            OrderMaintenanceViewModel orderMaintenanceViewModel)
+            OrderMaintenanceViewModel orderMaintenanceViewModel,
+            ReportDashboardViewModel reportDashboardViewModel)
         {
             _monitorViewModel = monitorViewModel;
             _orderBoardViewModel = orderBoardViewModel;
             _orderMaintenanceViewModel = orderMaintenanceViewModel;
+            _reportDashboardViewModel = reportDashboardViewModel;
 
             // 默认启动页显示为设备监控
             ShowMonitor();
@@ -129,12 +132,14 @@ namespace My_MiniMes.Shell.ViewModels
         }
 
         /// <summary>
-        /// 导航：显示数据报表 (待实现)
+        /// 导航：显示数据看板，并在进入页面时刷新最新数据
         /// </summary>
         [RelayCommand]
-        private void ShowReport()
+        private async Task ShowReport()
         {
-            PageTitle = "系统数据报表 (模块开发中...)";
+            PageTitle = "数据看板";
+            CurrentView = _reportDashboardViewModel;
+            await _reportDashboardViewModel.RefreshAsync();
         }
 
         /// <summary>

@@ -30,6 +30,10 @@
             <views:OrderMaintenanceView />
         </DataTemplate>
 
+        <DataTemplate DataType="{x:Type vms:ReportDashboardViewModel}">
+            <views:ReportDashboardView />
+        </DataTemplate>
+
         <!-- 2. 布尔值转换器：用于根据绑定的布尔值来决定控件的显示/隐藏 -->
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
@@ -191,7 +195,7 @@
                         <Button Command="{Binding ShowReportCommand}" Style="{StaticResource NavButtonStyle}">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="ChartLine" Width="22" Height="22" VerticalAlignment="Center" />
-                                <TextBlock Text="数据报表" Margin="14,0,0,0" VerticalAlignment="Center" />
+                                <TextBlock Text="数据看板" Margin="14,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </StackPanel>

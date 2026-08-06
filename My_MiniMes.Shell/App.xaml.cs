@@ -3,6 +3,8 @@ using Microsoft.Extensions.Hosting;
 using My_MiniMes.Shell.ViewModels;
 using My_MiniMes.Shell.Views;
 using My_MiniMes.Shell.Services;
+using LiveChartsCore.SkiaSharpView;
+using SkiaSharp;
 using System.Windows;
 using System.Threading;
 
@@ -22,6 +24,8 @@ namespace My_MiniMes.Shell
 
         public App()
         {
+            // 为 LiveCharts/SkiaSharp 指定支持中文的全局字体，避免图表文字显示为空白或方块
+            ConfigureLiveChartsChineseFont();
             // 初始化主机并注册依赖服务
             AppHost = Host.CreateDefaultBuilder()
                 .ConfigureServices((context, services) =>
@@ -55,8 +59,19 @@ namespace My_MiniMes.Shell
                     services.AddSingleton<MonitorViewModel>();
                     services.AddSingleton<OrderBoardViewModel>();
                     services.AddSingleton<OrderMaintenanceViewModel>();
+                    services.AddSingleton<ReportDashboardViewModel>();
                 })
                 .Build();
+        }
+
+        /// <summary>
+        /// 设置 LiveCharts 全局默认字体为微软雅黑。
+        /// 该字体在 Windows 中文环境中普遍存在，可让轴标签、图例、Tooltip 正常显示中文。
+        /// </summary>
+        private static void ConfigureLiveChartsChineseFont()
+        {
+            var typeface = SKTypeface.FromFamilyName("Microsoft YaHei") ?? SKTypeface.Default;
+            LiveChartsSkiaSharp.DefaultSKTypeface = typeface;
         }
 
         /// <summary>
